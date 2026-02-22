@@ -1182,14 +1182,17 @@
                 "group": "CLI commands",
                 "pages": [
                   "cli/index",
+                  "cli/acp",
                   "cli/agent",
                   "cli/agents",
                   "cli/approvals",
                   "cli/browser",
                   "cli/channels",
+                  "cli/config",
                   "cli/configure",
                   "cli/cron",
                   "cli/dashboard",
+                  "cli/devices",
                   "cli/directory",
                   "cli/dns",
                   "cli/docs",
@@ -1201,6 +1204,7 @@
                   "cli/memory",
                   "cli/message",
                   "cli/models",
+                  "cli/node",
                   "cli/nodes",
                   "cli/onboard",
                   "cli/pairing",
@@ -1216,7 +1220,8 @@
                   "cli/tui",
                   "cli/uninstall",
                   "cli/update",
-                  "cli/voicecall"
+                  "cli/voicecall",
+                  "cli/webhooks"
                 ]
               },
               {
