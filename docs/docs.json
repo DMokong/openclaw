@@ -272,6 +272,10 @@
       "destination": "/start/openclaw"
     },
     {
+      "source": "/start/pairing",
+      "destination": "/channels/pairing"
+    },
+    {
       "source": "/clawhub",
       "destination": "/tools/clawhub"
     },
@@ -891,9 +895,14 @@
                   "channels/mattermost",
                   "channels/signal",
                   "channels/imessage",
+                  "channels/bluebubbles",
                   "channels/msteams",
                   "channels/line",
                   "channels/matrix",
+                  "channels/nextcloud-talk",
+                  "channels/nostr",
+                  "channels/tlon",
+                  "channels/twitch",
                   "channels/zalo",
                   "channels/zalouser"
                 ]
@@ -1188,9 +1197,12 @@
                   "cli/approvals",
                   "cli/browser",
                   "cli/channels",
+                  "cli/clawbot",
+                  "cli/completion",
                   "cli/config",
                   "cli/configure",
                   "cli/cron",
+                  "cli/daemon",
                   "cli/dashboard",
                   "cli/devices",
                   "cli/directory",
@@ -1209,6 +1221,7 @@
                   "cli/onboard",
                   "cli/pairing",
                   "cli/plugins",
+                  "cli/qr",
                   "cli/reset",
                   "cli/sandbox",
                   "cli/security",
