@@ -1,0 +1,70 @@
+# Dockerfile.sandbox-dilbert
+#
+# Dilbert's dev sandbox.
+# Extends the base sandbox image with:
+#   - Go (pinned version, from upstream — NOT the outdated apt golang-go)
+#   - Ebitengine CGo dependencies (X11, OpenGL, ALSA)
+#   - Node.js + npm  (base image has python3 already)
+#   - Common build tools
+#
+# Security model:
+#   - Root only at BUILD time (package installs, Go setup)
+#   - Runs as non-root 'sandbox' user at RUNTIME
+#   - No capability grants, no privileged flag needed
+#
+# Build: scripts/sandbox-dilbert-setup.sh
+# Use:   agents.list[].sandbox.docker.image = "openclaw-sandbox-dilbert:latest"
+
+ARG BASE_IMAGE=openclaw-sandbox:bookworm-slim
+FROM ${BASE_IMAGE}
+
+USER root
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Ebitengine CGo dependencies:
+#   - build-essential, pkg-config: CGo compilation
+#   - libasound2-dev:              ALSA audio (Ebitengine audio backend)
+#   - libgl1-mesa-dev:             OpenGL
+#   - libxrandr-dev:               GLFW / X11 RandR extension
+#   - libxi-dev:                   X11 input extension
+#   - libxcursor-dev:              X11 cursor
+#   - libxinerama-dev:             X11 Xinerama
+#   - libxxf86vm-dev:              X11 XF86VidMode (required by GLFW)
+#
+# Runtimes:
+#   - nodejs, npm:    JavaScript runtime (python3 is already in the base image)
+#   - python3-pip:    pip for the existing python3 install
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    build-essential \
+    pkg-config \
+    libasound2-dev \
+    libgl1-mesa-dev \
+    libxrandr-dev \
+    libxi-dev \
+    libxcursor-dev \
+    libxinerama-dev \
+    libxxf86vm-dev \
+    nodejs \
+    npm \
+    python3-pip \
+  && rm -rf /var/lib/apt/lists/*
+
+# Go — pinned version from upstream, not the outdated apt golang-go.
+# ARG allows version bump without editing the Dockerfile.
+ARG GO_VERSION=1.25.7
+
+# Detect architecture at build time so the same Dockerfile works on amd64 and arm64.
+RUN ARCH=$(dpkg --print-architecture) \
+  && curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" \
+    | tar -C /usr/local -xz
+
+ENV PATH="/usr/local/go/bin:/home/sandbox/go/bin:${PATH}"
+ENV GOPATH="/home/sandbox/go"
+
+# Back to non-root for runtime. This is the user all exec commands run as.
+USER sandbox
+WORKDIR /home/sandbox
+
+CMD ["sleep", "infinity"]
