@@ -1,0 +1,21 @@
+# docker-compose.dilbert.yml
+#
+# Compose override that swaps the gateway image to openclaw:dilbert,
+# which includes Go and Ebitengine CGo deps baked in.
+#
+# Usage (with base compose file):
+#   docker compose -f docker-compose.yml -f docker-compose.dilbert.yml up -d
+#
+# Or set OPENCLAW_IMAGE in your .env:
+#   OPENCLAW_IMAGE=openclaw:dilbert
+#   docker compose up -d
+
+services:
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-openclaw:dilbert}
+    build:
+      context: .
+      dockerfile: Dockerfile.dilbert
+      args:
+        BASE_IMAGE: openclaw:local
+        GO_VERSION: "1.26.0"

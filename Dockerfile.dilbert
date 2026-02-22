@@ -1,0 +1,63 @@
+# Dockerfile.dilbert
+#
+# Extends the base openclaw image with tooling required for Dilbert,
+# the long-running engineering agent. Bakes in Go and Ebitengine CGo
+# dependencies so they survive image rebuilds.
+#
+# Build workflow:
+#   1. Build the base image first:
+#      docker build -t openclaw:local .
+#
+#   2. Build the Dilbert image:
+#      docker build -f Dockerfile.dilbert -t openclaw:dilbert .
+#
+#   3. Use openclaw:dilbert in your docker-compose setup:
+#      OPENCLAW_IMAGE=openclaw:dilbert docker compose up -d
+#      (or use docker-compose.dilbert.yml as an override)
+#
+# To update Go: bump GO_VERSION arg and rebuild.
+
+ARG BASE_IMAGE=openclaw:local
+FROM ${BASE_IMAGE}
+
+# Switch to root for system package installation
+USER root
+
+# Ebitengine CGo dependencies required for building/testing Enigma Fauna and
+# other Ebitengine-based projects. Also installs Xvfb for headless test runs
+# (go test ./... requires a display due to GLFW initialisation at package init).
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libxrandr-dev \
+    libasound2-dev \
+    libgl1-mesa-dev \
+    libxxf86vm-dev \
+    libxi-dev \
+    libxcursor-dev \
+    libxinerama-dev \
+    xvfb \
+    curl \
+    ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+# Install Go — detects architecture at build time (arm64 + amd64 supported).
+# Pin GO_VERSION via build arg to make upgrades explicit and auditable.
+ARG GO_VERSION=1.26.0
+RUN set -eux; \
+    ARCH="$(uname -m)"; \
+    case "${ARCH}" in \
+        aarch64|arm64) GOARCH="arm64" ;; \
+        x86_64|amd64)  GOARCH="amd64" ;; \
+        *) echo "Unsupported architecture: ${ARCH}" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${GOARCH}.tar.gz" -o /tmp/go.tar.gz; \
+    tar -C /usr/local -xzf /tmp/go.tar.gz; \
+    rm /tmp/go.tar.gz; \
+    /usr/local/go/bin/go version
+
+ENV PATH="/usr/local/go/bin:${PATH}"
+ENV CGO_ENABLED=1
+
+# Restore non-root user to match upstream openclaw image convention.
+# Note: if your docker-compose overrides the user, this has no effect at runtime.
+USER node
